@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Management System</title>
+    <title>Final Student Management System</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,8 +14,9 @@
         <p>Manage student records easily</p>
     </header>
 
-    <main>
-        <section class="form-section">
+    <main class="container">
+
+        <section class="card">
             <h2>Add Student</h2>
 
             <form id="studentForm">
@@ -33,9 +34,15 @@
             </form>
         </section>
 
-        <section class="records-section">
+        <section class="card">
             <h2>Student Records</h2>
-            <p>Total Students: <span id="totalStudents">0</span></p>
+
+            <div class="summary">
+                Total Students: <span id="totalStudents">0</span>
+            </div>
+
+            <input type="search" id="searchInput"
+                placeholder="Search by student name or department">
 
             <div class="table-container">
                 <table>
@@ -44,14 +51,14 @@
                             <th>Name</th>
                             <th>Department</th>
                             <th>Marks</th>
-                            <th>Action</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="studentList">
-                    </tbody>
+                    <tbody id="studentTable"></tbody>
                 </table>
             </div>
         </section>
+
     </main>
 
     <script src="script.js"></script>

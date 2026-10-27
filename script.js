@@ -2,46 +2,22 @@
 const studentForm = document.getElementById("studentForm");
 const studentName = document.getElementById("studentName");
 const department = document.getElementById("department");
-const marks = document.getElementById("marks");
-const studentList = document.getElementById("studentList");
+const marksInput = document.getElementById("marks");
+const studentTable = document.getElementById("studentTable");
 const totalStudents = document.getElementById("totalStudents");
+const searchInput = document.getElementById("searchInput");
 
-let students = [];
+let students = JSON.parse(localStorage.getItem("students")) || [];
+let editId = null;
 
-studentForm.addEventListener("submit", function (event) {
-    event.preventDefault();
+function saveStudents() {
+    localStorage.setItem("students", JSON.stringify(students));
+}
 
-    const name = studentName.value.trim();
-    const dept = department.value.trim();
-    const mark = Number(marks.value);
+function displayStudents(list = students) {
+    studentTable.replaceChildren();
 
-    if (name === "" || dept === "") {
-        alert("Please fill in all fields.");
-        return;
-    }
-
-    if (marks.value === "" || mark < 0 || mark > 100) {
-        alert("Marks must be between 0 and 100.");
-        return;
-    }
-
-    const student = {
-        id: Date.now(),
-        name: name,
-        department: dept,
-        marks: mark
-    };
-
-    students.push(student);
-
-    displayStudents();
-    studentForm.reset();
-});
-
-function displayStudents() {
-    studentList.replaceChildren();
-
-    students.forEach(function (student) {
+    list.forEach(function (student) {
         const row = document.createElement("tr");
 
         [student.name, student.department, student.marks].forEach(function (value) {
@@ -51,25 +27,117 @@ function displayStudents() {
         });
 
         const actionCell = document.createElement("td");
-        const deleteButton = document.createElement("button");
 
-        deleteButton.textContent = "Delete";
-        deleteButton.className = "delete-btn";
-
-        deleteButton.addEventListener("click", function () {
-            students = students.filter(function (item) {
-                return item.id !== student.id;
-            });
-
-            displayStudents();
+        const editButton = document.createElement("button");
+        editButton.textContent = "Edit";
+        editButton.className = "edit-btn";
+        editButton.type = "button";
+        editButton.addEventListener("click", function () {
+            editStudent(student.id);
         });
 
-        actionCell.appendChild(deleteButton);
+        const deleteButton = document.createElement("button");
+        deleteButton.textContent = "Delete";
+        deleteButton.className = "delete-btn";
+        deleteButton.type = "button";
+        deleteButton.addEventListener("click", function () {
+            deleteStudent(student.id);
+        });
+
+        actionCell.append(editButton, deleteButton);
         row.appendChild(actionCell);
-        studentList.appendChild(row);
+        studentTable.appendChild(row);
     });
 
     totalStudents.textContent = students.length;
 }
 
-console.log("Student Management System is ready!");
+studentForm.addEventListener("submit", function (event) {
+    event.preventDefault();
+
+    const name = studentName.value.trim();
+    const dept = department.value.trim();
+    const marks = Number(marksInput.value);
+
+    if (!name || !dept || marksInput.value === "" ||
+        !Number.isFinite(marks) || marks < 0 || marks > 100) {
+        alert("Enter valid details. Marks must be between 0 and 100.");
+        return;
+    }
+
+    if (editId !== null) {
+        const student = students.find(function (item) {
+            return item.id === editId;
+        });
+
+        if (student) {
+            student.name = name;
+            student.department = dept;
+            student.marks = marks;
+        }
+
+        editId = null;
+    } else {
+        students.push({
+            id: Date.now().toString() + Math.random().toString(16).slice(2),
+            name: name,
+            department: dept,
+            marks: marks
+        });
+    }
+
+    saveStudents();
+    displayStudents();
+    studentForm.reset();
+
+    const submitButton = studentForm.querySelector('button[type="submit"]');
+    submitButton.textContent = "Add Student";
+});
+
+function editStudent(id) {
+    const student = students.find(function (item) {
+        return item.id === id;
+    });
+
+    if (!student) return;
+
+    studentName.value = student.name;
+    department.value = student.department;
+    marksInput.value = student.marks;
+    editId = id;
+
+    studentForm.querySelector('button[type="submit"]').textContent = "Update Student";
+    studentName.focus();
+}
+
+function deleteStudent(id) {
+    const confirmed = confirm("Are you sure you want to delete this student?");
+
+    if (!confirmed) return;
+
+    students = students.filter(function (student) {
+        return student.id !== id;
+    });
+
+    if (editId === id) {
+        editId = null;
+        studentForm.reset();
+        studentForm.querySelector('button[type="submit"]').textContent = "Add Student";
+    }
+
+    saveStudents();
+    displayStudents();
+}
+
+searchInput.addEventListener("input", function () {
+    const query = searchInput.value.trim().toLowerCase();
+
+    const filteredStudents = students.filter(function (student) {
+        return student.name.toLowerCase().includes(query) ||
+               student.department.toLowerCase().includes(query);
+    });
+
+    displayStudents(filteredStudents);
+});
+
+displayStudents();
